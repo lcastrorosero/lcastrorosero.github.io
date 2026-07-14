@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Leidy M. Castro Rosero — Marine Scientist</title>
+<meta name="description" content="Leidy M. Castro Rosero — Marine scientist specialised in numerical & environmental modelling, physical oceanography, Lagrangian particle tracking and marine hazard forecasting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300;12..96,400;12..96,600;12..96,700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --foam:#DFF3EF;
+  --foam-dim:#9CC3C4;
+  --biolum:#47E0C0;
+  --buoy:#FF8A5C;
+  --surface:#0A3A55;
+  --ink:#02131F;
+  --card:rgba(223,243,239,0.05);
+  --line:rgba(223,243,239,0.16);
+  --maxw:1060px;
+  --display:'Bricolage Grotesque',sans-serif;
+  --body:'Instrument Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--body);
+  color:var(--foam);
+  background:linear-gradient(180deg,
+    #0E4A66 0%,
+    #0A3A55 9%,
+    #073049 20%,
+    #052538 38%,
+    #041C2C 55%,
+    #02131F 74%,
+    #010A12 90%,
+    #00060B 100%);
+  line-height:1.65;
+  overflow-x:hidden;
+}
+::selection{background:var(--biolum);color:var(--ink)}
+a{color:var(--biolum);text-decoration:none}
+a:hover{color:var(--buoy)}
+a:focus-visible,button:focus-visible{outline:2px solid var(--biolum);outline-offset:3px;border-radius:2px}
+
+/* ---------- particle canvas ---------- */
+#drift{position:fixed;inset:0;z-index:0;pointer-events:none}
+
+/* ---------- depth rail ---------- */
+#depth-rail{
+  position:fixed;right:26px;top:50%;transform:translateY(-50%);
+  z-index:5;display:flex;flex-direction:column;align-items:flex-end;gap:10px;
+  font-family:var(--mono);font-size:12px;color:var(--foam-dim);
+}
+#depth-rail .gauge{width:2px;height:180px;background:var(--line);position:relative;border-radius:2px}
+#depth-rail .gauge .fill{position:absolute;top:0;left:0;width:100%;background:var(--biolum);height:0%;border-radius:2px;box-shadow:0 0 8px rgba(71,224,192,.6)}
+#depth-readout{font-size:13px;color:var(--biolum);letter-spacing:.05em;white-space:nowrap}
+#depth-zone{font-size:10px;letter-spacing:.18em;text-transform:uppercase;white-space:nowrap}
+
+/* ---------- nav ---------- */
+nav{
+  position:fixed;top:0;left:0;right:0;z-index:6;
+  display:flex;justify-content:space-between;align-items:center;
+  padding:16px 32px;
+  background:linear-gradient(180deg,rgba(2,15,26,.85),rgba(2,15,26,0));
+  backdrop-filter:blur(4px);
+}
+nav .brand{font-family:var(--mono);font-size:13px;letter-spacing:.14em;color:var(--foam)}
+nav .brand span{color:var(--biolum)}
+nav ul{display:flex;gap:26px;list-style:none}
+nav ul a{font-size:13.5px;font-weight:500;color:var(--foam-dim);letter-spacing:.04em}
+nav ul a:hover{color:var(--biolum)}
+
+/* ---------- shared section chrome ---------- */
+main{position:relative;z-index:1}
+section{max-width:var(--maxw);margin:0 auto;padding:110px 32px 60px}
+.zone-tag{
+  font-family:var(--mono);font-size:12px;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--biolum);display:flex;align-items:center;gap:14px;margin-bottom:34px;
+}
+.zone-tag::after{content:"";flex:1;height:1px;background:var(--line)}
+.zone-tag .m{color:var(--foam-dim)}
+h2{font-family:var(--display);font-weight:600;font-size:clamp(30px,4.5vw,44px);line-height:1.12;margin-bottom:26px;letter-spacing:-.01em}
+
+/* ---------- hero ---------- */
+#surface{min-height:100svh;display:flex;flex-direction:column;justify-content:center;padding-top:120px}
+.hero-eyebrow{font-family:var(--mono);font-size:13px;color:var(--biolum);letter-spacing:.2em;text-transform:uppercase;margin-bottom:22px}
+h1{
+  font-family:var(--display);font-weight:700;
+  font-size:clamp(44px,8vw,92px);line-height:.98;letter-spacing:-.025em;margin-bottom:26px;
+}
+h1 .thin{font-weight:300;display:block;font-size:.52em;letter-spacing:0;color:var(--foam-dim);margin-top:14px;line-height:1.25}
+.hero-tag{max-width:560px;font-size:clamp(16px,2vw,19px);color:var(--foam-dim);margin-bottom:44px}
+.hero-tag b{color:var(--foam);font-weight:600}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;gap:10px;
+  font-family:var(--mono);font-size:13.5px;letter-spacing:.06em;
+  padding:13px 24px;border-radius:999px;border:1px solid var(--line);
+  color:var(--foam);transition:all .25s ease;
+}
+.btn.primary{background:var(--biolum);border-color:var(--biolum);color:var(--ink);font-weight:500}
+.btn.primary:hover{background:var(--buoy);border-color:var(--buoy);color:var(--ink);transform:translateY(-2px)}
+.btn:hover{border-color:var(--biolum);color:var(--biolum);transform:translateY(-2px)}
+.scroll-hint{margin-top:70px;font-family:var(--mono);font-size:12px;color:var(--foam-dim);letter-spacing:.16em;display:flex;align-items:center;gap:12px}
+.scroll-hint .arrow{display:inline-block;animation:sink 2.2s ease-in-out infinite}
+@keyframes sink{0%,100%{transform:translateY(0);opacity:.5}50%{transform:translateY(7px);opacity:1}}
+
+/* ---------- about ---------- */
+.about-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:56px;align-items:start}
+.about-grid p{margin-bottom:18px;color:var(--foam-dim);font-size:16.5px}
+.about-grid p b{color:var(--foam);font-weight:600}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.stat{
+  border:1px solid var(--line);border-radius:14px;padding:20px 18px;background:var(--card);
+  transition:border-color .3s;
+}
+.stat:hover{border-color:var(--biolum)}
+.stat .n{font-family:var(--display);font-weight:700;font-size:34px;color:var(--biolum);line-height:1}
+.stat .l{font-size:12.5px;color:var(--foam-dim);margin-top:8px;line-height:1.4}
+.chips{display:flex;flex-wrap:wrap;gap:10px;margin-top:34px}
+.chip{
+  font-family:var(--mono);font-size:12px;letter-spacing:.03em;
+  border:1px solid var(--line);border-radius:999px;padding:7px 15px;color:var(--foam-dim);
+  transition:all .25s;
+}
+.chip:hover{border-color:var(--biolum);color:var(--biolum)}
+
+/* ---------- experience timeline ---------- */
+.timeline{position:relative;margin-top:10px}
+.timeline::before{
+  content:"";position:absolute;left:7px;top:6px;bottom:6px;width:1px;
+  background:linear-gradient(180deg,var(--biolum),rgba(71,224,192,.05));
+}
+.tl-item{position:relative;padding:0 0 46px 44px}
+.tl-item:last-child{padding-bottom:0}
+.tl-item::before{
+  content:"";position:absolute;left:0;top:7px;width:15px;height:15px;border-radius:50%;
+  background:var(--ink);border:2px solid var(--biolum);box-shadow:0 0 10px rgba(71,224,192,.45);
+}
+.tl-when{font-family:var(--mono);font-size:12px;color:var(--biolum);letter-spacing:.1em;margin-bottom:6px}
+.tl-role{font-family:var(--display);font-weight:600;font-size:21px;letter-spacing:-.01em}
+.tl-org{color:var(--foam-dim);font-size:14.5px;margin:3px 0 12px}
+.tl-item ul{list-style:none;color:var(--foam-dim);font-size:15px}
+.tl-item ul li{padding-left:18px;position:relative;margin-bottom:7px}
+.tl-item ul li::before{content:"–";position:absolute;left:0;color:var(--biolum)}
+
+/* ---------- research cards ---------- */
+.cards{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}
+.card{
+  border:1px solid var(--line);border-radius:16px;padding:26px 24px;background:var(--card);
+  display:flex;flex-direction:column;gap:12px;transition:transform .3s,border-color .3s;
+}
+.card:hover{transform:translateY(-4px);border-color:var(--biolum)}
+.card .k{font-family:var(--mono);font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--buoy)}
+.card h3{font-family:var(--display);font-weight:600;font-size:19.5px;line-height:1.3;letter-spacing:-.01em}
+.card p{font-size:14.5px;color:var(--foam-dim);flex:1}
+.card .tools{font-family:var(--mono);font-size:11.5px;color:var(--foam-dim);opacity:.85}
+.card a.more{font-family:var(--mono);font-size:12.5px}
+
+.pubs{margin-top:56px}
+.pubs h3{font-family:var(--display);font-weight:600;font-size:23px;margin-bottom:20px}
+.pub{
+  display:flex;gap:18px;padding:17px 0;border-bottom:1px solid var(--line);align-items:baseline;
+}
+.pub:last-child{border-bottom:none}
+.pub .yr{font-family:var(--mono);font-size:12.5px;color:var(--biolum);min-width:44px}
+.pub .t{font-size:15px;color:var(--foam)}
+.pub .t .j{color:var(--foam-dim);font-style:italic}
+.pub .t a{font-family:var(--mono);font-size:12px;white-space:nowrap;margin-left:8px}
+.pubs .note{font-size:13.5px;color:var(--foam-dim);margin-top:16px;font-family:var(--mono)}
+
+/* ---------- contact / seafloor ---------- */
+#seafloor{padding-bottom:150px;text-align:center}
+#seafloor h2{font-size:clamp(34px,5.5vw,56px)}
+#seafloor .sub{color:var(--foam-dim);max-width:520px;margin:0 auto 44px;font-size:17px}
+.contact-row{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:60px}
+.floor-note{font-family:var(--mono);font-size:11.5px;color:var(--foam-dim);letter-spacing:.14em;opacity:.7}
+footer{position:relative;z-index:1;text-align:center;padding:26px;font-family:var(--mono);font-size:11.5px;color:var(--foam-dim);opacity:.65}
+
+/* ---------- reveal on scroll ---------- */
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in{opacity:1;transform:none}
+
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none;transition:none}
+  .scroll-hint .arrow{animation:none}
+  #drift{display:none}
+}
+@media (max-width:900px){
+  .about-grid{grid-template-columns:1fr}
+  .cards{grid-template-columns:1fr}
+  #depth-rail{right:12px}
+  #depth-rail .gauge{height:110px}
+  #depth-zone{display:none}
+  nav ul{display:none}
+  section{padding:90px 22px 50px}
+}
+</style>
+</head>
+<body>
+
+<canvas id="drift" aria-hidden="true"></canvas>
+
+<div id="depth-rail" aria-hidden="true">
+  <div id="depth-readout">0 m</div>
+  <div class="gauge"><div class="fill" id="gauge-fill"></div></div>
+  <div id="depth-zone">surface</div>
+</div>
+
+<nav>
+  <div class="brand">L.M. <span>CASTRO</span> ROSERO</div>
+  <ul>
+    <li><a href="#epipelagic">About</a></li>
+    <li><a href="#mesopelagic">Experience</a></li>
+    <li><a href="#bathypelagic">Research</a></li>
+    <li><a href="#seafloor">Contact</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- ======== 0 m · SURFACE ======== -->
+<section id="surface">
+  <div class="hero-eyebrow">Barcelona, Spain · Physical Oceanography</div>
+  <h1>
+    Leidy M.<br>Castro Rosero
+    <span class="thin">Marine scientist · Numerical &amp; environmental modelling</span>
+  </h1>
+  <p class="hero-tag">
+    I model <b>how the ocean moves what we leave behind</b> — from floating plastic
+    in the Black Sea to oil spills in the Caribbean — turning currents, tides and
+    Lagrangian particles into tools for environmental decision-making.
+  </p>
+  <div class="hero-ctas">
+    <a class="btn primary" href="#seafloor">Get in touch</a>
+    <a class="btn" href="https://www.linkedin.com/in/leidymcastror" target="_blank" rel="noopener">LinkedIn ↗</a>
+    <a class="btn" href="https://orcid.org/0000-0002-9157-9200" target="_blank" rel="noopener">ORCID ↗</a>
+  </div>
+  <div class="scroll-hint"><span class="arrow">▼</span> SCROLL TO DESCEND THE WATER COLUMN</div>
+</section>
+
+<!-- ======== −50 m · EPIPELAGIC ======== -->
+<section id="epipelagic">
+  <div class="zone-tag reveal">Epipelagic zone <span class="m">· −50 m</span></div>
+  <h2 class="reveal">From chemical engineering<br>to the open sea</h2>
+  <div class="about-grid">
+    <div class="reveal">
+      <p>I'm a researcher with a <b>PhD in Marine Sciences</b> (Universitat de Barcelona / Universitat Politècnica de Catalunya, awarded <b>Excellent Cum Laude</b>), a background in Chemical Engineering, and a Master's in Oceanography and Marine Environment Management.</p>
+      <p>My work sits where <b>physical oceanography meets environmental risk</b>: hydrodynamic models (ROMS, MOHID), Lagrangian simulations (OceanParcels, LOCATE, GNOME) and satellite &amp; in-situ data analysis, applied to marine litter transport, oil spill forecasting and operational oceanography.</p>
+      <p>I've worked across <b>Colombia, Spain and the EU</b> — contributing to national hazard-forecasting systems, EU H2020 research, and open-access geospatial platforms — always in close collaboration with international teams and government institutions.</p>
+      <div class="chips">
+        <span class="chip">Python</span><span class="chip">Matlab</span><span class="chip">ROMS</span><span class="chip">MOHID</span><span class="chip">OceanParcels</span><span class="chip">GNOME / pyGNOME</span><span class="chip">LOCATE</span><span class="chip">ArcGIS · QGIS</span><span class="chip">SNAP</span><span class="chip">Linux</span><span class="chip">CMEMS data</span><span class="chip">Sentinel-2</span>
+      </div>
+    </div>
+    <div class="stats reveal">
+      <div class="stat"><div class="n">7</div><div class="l">peer-reviewed publications (3 as first author)</div></div>
+      <div class="stat"><div class="n">3</div><div class="l">countries of research experience: Colombia, Spain, EU projects</div></div>
+      <div class="stat"><div class="n">H2020</div><div class="l">lead modeller for multi-scale simulations in the EU project DOORS</div></div>
+      <div class="stat"><div class="n">2</div><div class="l">operational spill-forecasting systems supporting national response (Colombia)</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- ======== −400 m · MESOPELAGIC ======== -->
+<section id="mesopelagic">
+  <div class="zone-tag reveal">Mesopelagic zone <span class="m">· −400 m</span></div>
+  <h2 class="reveal">Experience</h2>
+  <div class="timeline">
+    <div class="tl-item reveal">
+      <div class="tl-when">SEP 2025 — PRESENT</div>
+      <div class="tl-role">Technical Researcher</div>
+      <div class="tl-org">Universitat Politècnica de Catalunya (UPC) · Barcelona, Spain</div>
+      <ul>
+        <li>Lead the design and implementation of numerical modelling workflows for coastal applications.</li>
+        <li>Configuration, execution and optimisation of ROMS hydrodynamic simulations.</li>
+        <li>Analysis and validation of model outputs for scientific and technical purposes.</li>
+      </ul>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-when">OCT 2021 — OCT 2025</div>
+      <div class="tl-role">Predoctoral Researcher</div>
+      <div class="tl-org">Universitat de Barcelona / Universitat Politècnica de Catalunya · Spain</div>
+      <ul>
+        <li>Doctoral research on numerical modelling of floating marine litter transport and accumulation in the Black Sea.</li>
+        <li>Integrated ocean circulation models, Lagrangian simulations (LOCATE / OceanParcels) and in-situ observations.</li>
+        <li>Analysis of CMEMS hydrodynamic data and Sentinel-2 satellite imagery; participation in EU H2020 project DOORS.</li>
+      </ul>
+    </div>
+    <div class="tl-item reveal">
+      <div class="tl-when">2019 — 2021</div>
+      <div class="tl-role">Researcher, Operational Oceanography Area</div>
+      <div class="tl-org">CIOH-DIMAR — Centro de Investigaciones Oceanográficas e Hidrográficas del Caribe · Colombia</div>
+      <ul>
+        <li>Implemented operational oil spill forecast modules (SIPSEM project) supporting national marine hazard response.</li>
+        <li>Regional and local forecasting for the Colombian Caribbean &amp; Pacific using GNOME and MOHID; tidal data integration (FES2014).</li>
+        <li>Immediate-response spill simulations, 3D blowout module research, and participation in the SeaFlower 2019 oceanographic campaign.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- ======== −1500 m · BATHYPELAGIC ======== -->
+<section id="bathypelagic">
+  <div class="zone-tag reveal">Bathypelagic zone <span class="m">· −1500 m</span></div>
+  <h2 class="reveal">Research highlights</h2>
+  <div class="cards">
+    <div class="card reveal">
+      <div class="k">PhD · Black Sea</div>
+      <h3>Floating marine litter: transport &amp; accumulation</h3>
+      <p>Multi-year numerical modelling of where plastic goes in the Black Sea — sources, pathways and accumulation hotspots — combining circulation models, Lagrangian tracking and observations. Dissertation awarded Excellent Cum Laude.</p>
+      <div class="tools">LOCATE · OceanParcels · CMEMS · Sentinel-2</div>
+    </div>
+    <div class="card reveal">
+      <div class="k">EU H2020 · DOORS</div>
+      <h3>Multi-scale modelling for the Black Sea ecosystem</h3>
+      <p>Lead modeller for multi-scale simulations within the EU-funded DOORS project, including backtracking modelling to trace the sources of floating plastic in Romanian waters under changing regional pressures.</p>
+      <div class="tools">Backtracking · River inputs · International consortium</div>
+    </div>
+    <div class="card reveal">
+      <div class="k">Operational · Colombia</div>
+      <h3>Oil spill forecasting for national response</h3>
+      <p>Developed operational spill-forecasting modules for the Colombian Caribbean and Pacific — including local systems for Cartagena, Santa Marta and Puerto Bolívar — used in environmental emergency response and prevention.</p>
+      <div class="tools">GNOME · MOHID · FES2014 tides · SIPSEM</div>
+    </div>
+    <div class="card reveal">
+      <div class="k">Open science</div>
+      <h3>Open-access geospatial platform</h3>
+      <p>Model-derived datasets of floating marine litter accumulation and backtracking in the Black Sea, integrated into an open-access ArcGIS platform for researchers and decision-makers.</p>
+      <div class="tools">ArcGIS Experience · Open data</div>
+      <a class="more" href="https://experience.arcgis.com/experience/d767b219a6884136b8294ca2ac5401c8/page/RELEASE-FROM-RIVERS-SIMULATION" target="_blank" rel="noopener">Explore the platform ↗</a>
+    </div>
+  </div>
+
+  <div class="pubs reveal">
+    <h3>Selected publications</h3>
+    <div class="pub"><div class="yr">2025</div><div class="t">Tracing the sources of floating plastic in Romanian waters under changing regional pressures through backtracking modelling. <span class="j">Science of The Total Environment</span><a href="https://doi.org/10.1016/j.scitotenv.2025.181035" target="_blank" rel="noopener">DOI ↗</a></div></div>
+    <div class="pub"><div class="yr">2025</div><div class="t">Numerical modelling of the dispersion and accumulation of marine litter from the Dniester River, NW Black Sea. <span class="j">Marine Pollution Bulletin</span><a href="https://doi.org/10.1016/j.marpolbul.2025.117602" target="_blank" rel="noopener">DOI ↗</a></div></div>
+    <div class="pub"><div class="yr">2024</div><div class="t">LOCATE v1.0: Numerical modelling of floating marine debris dispersion in coastal regions using Parcels v2.4.2. <span class="j">Geoscientific Model Development</span><a href="https://doi.org/10.5194/gmd-17-2221-2024" target="_blank" rel="noopener">DOI ↗</a></div></div>
+    <div class="pub"><div class="yr">2023</div><div class="t">Transport and accumulation of floating marine litter in the Black Sea: insights from numerical modelling. <span class="j">Frontiers in Marine Science</span><a href="https://doi.org/10.3389/fmars.2023.1213333" target="_blank" rel="noopener">DOI ↗</a></div></div>
+    <div class="note">+ 3 more peer-reviewed papers · full list on <a href="https://orcid.org/0000-0002-9157-9200" target="_blank" rel="noopener">ORCID</a></div>
+  </div>
+</section>
+
+<!-- ======== −4000 m · SEAFLOOR ======== -->
+<section id="seafloor">
+  <div class="zone-tag reveal">Abyssopelagic zone <span class="m">· −4000 m</span></div>
+  <h2 class="reveal">You've reached the seafloor.<br>Let's talk.</h2>
+  <p class="sub reveal">Open to research collaborations, operational oceanography projects and roles in numerical &amp; environmental modelling.</p>
+  <div class="contact-row reveal">
+    <a class="btn primary" href="mailto:lemcastroro@gmail.com">lemcastroro@gmail.com</a>
+    <a class="btn" href="https://www.linkedin.com/in/leidymcastror" target="_blank" rel="noopener">LinkedIn ↗</a>
+    <a class="btn" href="https://orcid.org/0000-0002-9157-9200" target="_blank" rel="noopener">ORCID ↗</a>
+  </div>
+  <div class="floor-note reveal">DEPTH −4000 M · PRESSURE ≈ 400 ATM · SIGNAL STILL CLEAR</div>
+</section>
+
+</main>
+
+<footer>© 2026 Leidy M. Castro Rosero · Barcelona · Built with ocean currents &amp; Lagrangian particles</footer>
+
+<script>
+/* ---------- Lagrangian drift particles ---------- */
+(function(){
+  const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(reduce) return;
+  const c = document.getElementById('drift');
+  const ctx = c.getContext('2d');
+  let W,H,parts=[];
+  function resize(){
+    W=c.width=innerWidth; H=c.height=innerHeight;
+    const n = Math.min(90, Math.floor(W*H/16000));
+    parts = Array.from({length:n},()=>({
+      x:Math.random()*W, y:Math.random()*H,
+      s:.4+Math.random()*1.6, o:.15+Math.random()*.45, t:Math.random()*1000
+    }));
+  }
+  resize(); addEventListener('resize',resize);
+  /* simple flow field: particles drift like a slow current */
+  function flow(x,y,t){
+    const a = Math.sin(y*.004 + t*.00045) + Math.cos(x*.003 - t*.0003);
+    return {vx: .25 + .35*Math.cos(a), vy: .05 + .18*Math.sin(a*1.7)};
+  }
+  let last=0;
+  function frame(ts){
+    const dt = Math.min(40, ts-last); last=ts;
+    ctx.clearRect(0,0,W,H);
+    for(const p of parts){
+      const v = flow(p.x,p.y,ts);
+      p.x += v.vx*dt*.06; p.y += v.vy*dt*.06;
+      if(p.x>W+10) p.x=-10; if(p.y>H+10) p.y=-10; if(p.y<-10) p.y=H+10;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.s,0,Math.PI*2);
+      ctx.fillStyle=`rgba(120,220,200,${p.o*.5})`;
+      ctx.fill();
+    }
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+
+/* ---------- depth gauge ---------- */
+(function(){
+  const readout=document.getElementById('depth-readout');
+  const zoneEl=document.getElementById('depth-zone');
+  const fill=document.getElementById('gauge-fill');
+  const MAX=4000;
+  const zones=[[0,'surface'],[50,'epipelagic'],[200,'mesopelagic'],[1000,'bathypelagic'],[3000,'abyssopelagic']];
+  function update(){
+    const doc=document.documentElement;
+    const p=Math.min(1, scrollY/Math.max(1,(doc.scrollHeight-innerHeight)));
+    const d=Math.round(p*MAX);
+    readout.textContent = d===0 ? '0 m' : '−'+d.toLocaleString('en-US')+' m';
+    fill.style.height=(p*100)+'%';
+    let z=zones[0][1];
+    for(const [lim,name] of zones){ if(d>=lim) z=name; }
+    zoneEl.textContent=z;
+  }
+  addEventListener('scroll',update,{passive:true}); update();
+})();
+
+/* ---------- reveal on scroll ---------- */
+(function(){
+  const els=document.querySelectorAll('.reveal');
+  if(!('IntersectionObserver' in window)){ els.forEach(e=>e.classList.add('in')); return; }
+  const io=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+  },{threshold:.12});
+  els.forEach(e=>io.observe(e));
+})();
+</script>
+</body>
+</html>
